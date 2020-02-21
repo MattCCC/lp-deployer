@@ -1,9 +1,8 @@
 #!/bin/bash
 
 # Begin Standard 'imports'
-set -e
-set -o pipefail
-
+# set -e
+# set -o pipefail
 
 gray="\\e[37m"
 blue="\\e[36m"
@@ -58,7 +57,7 @@ debug() {
 # Returns:
 #   None
 #######################################
-warning() { echo -e "${yellow}âœ” $*${reset}"; }
+warning() { echo -e "${yellow}WARNING: $*${reset}"; }
 
 #######################################
 # echoes a message in green
@@ -69,7 +68,7 @@ warning() { echo -e "${yellow}âœ” $*${reset}"; }
 # Returns:
 #   None
 #######################################
-success() { echo -e "${green}âœ” $*${reset}"; }
+success() { echo -e "${green} $*${reset}"; }
 
 #######################################
 # echoes a message in red and terminates the programm
@@ -80,7 +79,7 @@ success() { echo -e "${green}âœ” $*${reset}"; }
 # Returns:
 #   None
 #######################################
-fail() { echo -e "${red}âœ– $*${reset}"; exit 1; }
+fail() { echo -e "${red}FAIL: $*${reset}"; exit 1; }
 
 ## Enable debug mode.
 enable_debug() {

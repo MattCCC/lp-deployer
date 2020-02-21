@@ -25,3 +25,8 @@ release:
 	  git tag $(NEXT_VERSION) ;\
 	  git push --tags ;\
 	fi
+
+publish:
+	docker login
+	docker tag lp-deployer:latest deindesign33s/lp-deployer:latest
+	docker push deindesign33s/lp-deployer:latest

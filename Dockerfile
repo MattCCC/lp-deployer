@@ -1,4 +1,4 @@
-FROM alpine
+FROM alpine:latest
 
 ENV APP_HOME /home
 
@@ -13,7 +13,10 @@ RUN apk add --update --no-cache \
 COPY pipe ./provision
 
 RUN chmod +x -R ./provision; \
-    ./provision/install.sh
+    ./provision/install.sh; \
+    rm ./provision/install.sh
 
 CMD ["/bin/bash"]
 ENTRYPOINT ["./provision/pipe.sh"]
+
+EXPOSE 80 443

@@ -9,6 +9,7 @@
 #   PRIV_KEY_DEPLOY_URL
 #
 # Optional globals:
+#   BACKEND
 #   DEBUG
 
 source "$(dirname "$0")/common.sh"
@@ -29,26 +30,29 @@ validate() {
   : DEPLOY_URL=${DEPLOY_URL:?'DEPLOY_URL variable missing'}
   : CI=${CI:?'CI variable missing'}
   : BITBUCKET_BUILD_NUMBER=${BITBUCKET_BUILD_NUMBER:?'BITBUCKET_BUILD_NUMBER variable missing.'}
-  : PRIV_KEY_DEPLOY_URL=${PRIV_KEY_DEPLOY_URL:="${PRIV_KEY_DEPLOY_URL}"}
+  : PRIV_KEY_DEPLOY_URL=${PRIV_KEY_DEPLOY_URL:?'PRIV_KEY_DEPLOY_URL variable missing.'}
 }
 
 run_pipe() {
     info "Starting deployment..."
 
-    ./deploy.sh
+    ./provision/deploy.sh
 
     # TODO return depending on response
-    STATUS=1
+    STATUS=0
 
     if [[ "${STATUS}" == "0" ]]; then
       success "Deployment finished."
     else
       fail "Deployment failed."
+      exit $STATUS
     fi
 
-    exit $STATUS
 }
 
 validate
 enable_debug
 run_pipe
+
+# Keep terminal open
+exec "$@"

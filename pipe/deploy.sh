@@ -1,25 +1,19 @@
 #!/usr/bin/env bash
 
-echo "$USER"
-
-BITBUCKET_BRANCH=$1
-DEPLOY_URL=$2
-CI=$3
-BITBUCKET_BUILD_NUMBER=$4
-PRIV_KEY_DEPLOY_URL=$5
-
 DIR=${PWD}
 PROVISIONDIR="$DIR/provision"
 TAG="v${BITBUCKET_BUILD_NUMBER}"
+
+source "$(dirname "$0")/common.sh"
 
 # Wait for build to finish
 wait
 
 date
-echo "Make $TAG release from $BITBUCKET_BRANCH and deploy to $DEPLOY_URL"
+info "Make $TAG release from $BITBUCKET_BRANCH and deploy to $DEPLOY_URL"
 
 cd ${DIR}
-echo "Checkout inside of $DIR"
+info "Checkout inside of $DIR"
 git checkout -f -b ${TAG}
 
 # Remove untracked
@@ -32,44 +26,51 @@ git config core.autocrlf true
 git config --global user.email "you@auto.com"
 git config --global user.name "Auto"
 
-
 date
 BRANCH=`git rev-parse --abbrev-ref HEAD`
-echo "On branch: $BRANCH"
+info "On branch: $BRANCH"
 
 
 date
-echo "Apply gitignores"
 branch="release-${BITBUCKET_BRANCH}"
 
-cat ${PROVISIONDIR}/.gitignores/all > ${DIR}/.gitignore
-if [[ -f ${PROVISIONDIR}/.gitignores/$branch ]]; then
-    cat ${PROVISIONDIR}/.gitignores/$branch >> ${DIR}/.gitignore
-    echo "Gitignore from $branch from $PROVISIONDIR updated"
-    cat ${DIR}/.gitignore
+if [[ -f ${PROVISIONDIR}/.gitignores/all ]]; then
+    info "Apply gitignores"
+    cat ${PROVISIONDIR}/.gitignores/all > ${DIR}/.gitignore
+
+    if [[ -f ${PROVISIONDIR}/.gitignores/$branch ]]; then
+        cat ${PROVISIONDIR}/.gitignores/$branch >> ${DIR}/.gitignore
+        success "Gitignore from $branch from $PROVISIONDIR updated"
+        cat ${DIR}/.gitignore
+    fi
+else
+    info "Gitignores not found. Skipped..."
 fi
 
 
 date
-echo 'Run make build cleanup'
+info 'Run make build cleanup'
 make build-cleanup &> /dev/null
+success 'Completed'
 wait
 
 
 date
-echo 'Run Add Dist by refreshing gitignore'
+info 'Run Add Dist by refreshing gitignore'
 git rm -r --cached . &> /dev/null
 git add -A &> /dev/null
 git add app/dist -f
 git commit -m "chore(INBUILD) Add dist"
+success 'Completed'
 wait
 
 
 date
-echo 'Run make remove src'
+info 'Run make remove src'
 make remove-src &> /dev/null
 wait
 git commit -m "chore(INBUILD) Cleanup"
+success 'Completed'
 
 date
 git status
@@ -78,23 +79,23 @@ echo "$(git rev-list --all --count) commits in total"
 
 
 date
-echo "Connect to remote"
+info "Connect to remote"
 
 # Add keys
 mkdir ~/.ssh/ &>/dev/null
 touch ~/.ssh/known_hosts
 
 DOMAIN=`echo "$DEPLOY_URL" | sed 's/.*@\(.*\):.*/\1/'`
-PORT=`echo "$DEPLOY_URL" | grep -o -P '(?<=\:)[0-9]+(?=\/)'`
-SSH_DEST=`echo "$DEPLOY_URL" | grep -o -P '(?<=\:\/\/).*(?=\:)'`
-SSH_GIT_DIR=`echo "$DEPLOY_URL" | grep -o -P '(?<=[0-9]\/).*'`
+PORT=`echo "$DEPLOY_URL" | grep -o -e '(?<=\:)[0-9]+(?=\/)'`
+SSH_DEST=`echo "$DEPLOY_URL" | grep -o -e '(?<=\:\/\/).*(?=\:)'`
+SSH_GIT_DIR=`echo "$DEPLOY_URL" | grep -o -e '(?<=[0-9]\/).*'`
 
 if [ -z "$DOMAIN" ]; then
-    echo "Fatal Error: Cannot find deploy url domain"
-    exit 126
+    error "Fatal Error: Cannot find deploy url domain"
+    # exit 126
 elif [ -z "$PORT" ]; then
-    echo "Fatal Error: Cannot find port in deploy url"
-    exit 126
+    error "Fatal Error: Cannot find port in deploy url"
+    # exit 126
 else
     ssh-keyscan -p ${PORT} -t rsa,dsa ${DOMAIN} >> ~/.ssh/known_hosts
 
@@ -137,6 +138,7 @@ _EOF_
 
     # Switch to branch
     ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG"
+    success 'Deployment Successful'
     wait
 fi
 
