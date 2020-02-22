@@ -8,7 +8,16 @@ WORKDIR ${APP_HOME}
 
 RUN apk add --update --no-cache \
     bash \
-    sudo
+    sudo \
+    openssh \
+    vim \
+    ca-certificates \
+    zip unzip \
+    wget curl \
+    git \
+    npm
+
+RUN npm install -g yarn -s --no-progress &>/dev/null
 
 COPY pipe ./provision
 

@@ -5,17 +5,7 @@ source "$(dirname "$0")/common.sh"
 echo ${APP_HOME};
 
 date
-info "Installing packages..."
-
-apk add openssh \
-        vim \
-        ca-certificates \
-        zip unzip \
-        wget curl \
-        git \
-        npm
-
-npm install -g yarn -s --no-progress &>/dev/null
+info "Installing additional packages..."
 
 if [[ "${BACKEND}" == "true" ]]; then
     info "Installing backend packages..."

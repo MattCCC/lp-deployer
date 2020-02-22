@@ -137,7 +137,7 @@ _EOF_
     wait
 
     # Switch to branch
-    ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; npm i; npm run start"
+    ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; npm i; npm run build; npm run start"
     success 'Deployment Successful'
     wait
 fi
