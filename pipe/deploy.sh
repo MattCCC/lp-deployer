@@ -86,9 +86,9 @@ mkdir ~/.ssh/ &>/dev/null
 touch ~/.ssh/known_hosts
 
 DOMAIN=`echo "$DEPLOY_URL" | sed 's/.*@\(.*\):.*/\1/'`
-PORT=`echo "$DEPLOY_URL" | grep -o -e '(?<=\:)[0-9]+(?=\/)'`
-SSH_DEST=`echo "$DEPLOY_URL" | grep -o -e '(?<=\:\/\/).*(?=\:)'`
-SSH_GIT_DIR=`echo "$DEPLOY_URL" | grep -o -e '(?<=[0-9]\/).*'`
+PORT=`echo "$DEPLOY_URL" | sed -n 's|.*:\([0-9]*\)\(.*\)|\1|p'`
+SSH_DEST=`echo "$DEPLOY_URL" | sed -n 's|.*\/\(.*\)\:\(.*\)|\1|p'`
+SSH_GIT_DIR=`echo "$DEPLOY_URL" | sed -n 's|.*:\([0-9]*\)\(.*\)|\2|p'`
 
 if [ -z "$DOMAIN" ]; then
     error "Fatal Error: Cannot find deploy url domain"
@@ -137,7 +137,7 @@ _EOF_
     wait
 
     # Switch to branch
-    ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG"
+    ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; npm i; npm run start"
     success 'Deployment Successful'
     wait
 fi

@@ -27,6 +27,7 @@ release:
 	fi
 
 publish:
+	docker build -t lp-deployer .
 	docker login
 	docker tag lp-deployer:latest deindesign33s/lp-deployer:latest
 	docker push deindesign33s/lp-deployer:latest
