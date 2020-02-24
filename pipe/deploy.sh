@@ -59,7 +59,7 @@ date
 info 'Run Add Dist by refreshing gitignore'
 git rm -r --cached . &> /dev/null
 git add -A &> /dev/null
-git add app/dist -f
+git add app/dist -f &> /dev/null
 git commit -m "chore(INBUILD) Add dist"
 success 'Completed'
 wait
@@ -137,7 +137,7 @@ _EOF_
     wait
 
     # Switch to branch
-    ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; npm i; npm run build; npm run generate"
+    ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; npm i; npm run build; killall -9 node; npm run start &>/dev/null &"
     success 'Deployment Successful'
     wait
 fi
