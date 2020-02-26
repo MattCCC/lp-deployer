@@ -137,7 +137,7 @@ _EOF_
     wait
 
     # Switch to branch
-    ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; npm i; npm run build; killall -9 node; npm run start &>/dev/null &"
+    ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; npm i; npm run build; pm2 startOrRestart ecosystem.config.js --only prod &>/dev/null &"
     success 'Deployment Successful'
     wait
 fi
