@@ -3,6 +3,7 @@
 #
 # Required globals:
 #   BITBUCKET_BRANCH
+#   APP_ENV
 #   DEPLOY_URL
 #   CI
 #   BITBUCKET_BUILD_NUMBER
@@ -26,6 +27,7 @@ enable_debug() {
 
 validate() {
   # mandatory parameters
+  : APP_ENV=${APP_ENV:?'APP_ENV variable missing'}
   : BITBUCKET_BRANCH=${BITBUCKET_BRANCH:?'BITBUCKET_BRANCH variable missing.'}
   : DEPLOY_URL=${DEPLOY_URL:?'DEPLOY_URL variable missing'}
   : CI=${CI:?'CI variable missing'}
