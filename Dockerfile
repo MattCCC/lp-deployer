@@ -7,7 +7,7 @@ VOLUME [${APP_HOME}]
 WORKDIR ${APP_HOME}
 
 RUN apk add --update --no-cache \
-    bash \
+    bash make \
     sudo \
     openssh \
     vim \
