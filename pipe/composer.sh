@@ -1,10 +1,18 @@
 #!/bin/bash
-
 # CONNECT TO REPOS FOR DEPS
-
+#
 # Access Composer Repo by using Personal Access Token
 # To do so we need to perform series of replacements
 # until more proper git protocol solution will be implemented
+#
+# Required globals:
+#   REPLACE_FROM
+#   REPLACE_TO
+#   PRIV_KEY
+#
+#   REPLACE_FROM_BITBUCKET
+#   REPLACE_TO_BITBUCKET
+#   PRIV_KEY_BITBUCKET
 
 source "$(dirname "$0")/common.sh"
 source "$(dirname "$0")/utils.sh"

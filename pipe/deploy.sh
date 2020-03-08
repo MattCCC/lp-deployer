@@ -87,6 +87,7 @@ remove_src() {
     wait
     git commit -m "chore(INBUILD) Cleanup"
     success 'Completed'
+    wait
 }
 
 print_stats() {
@@ -94,6 +95,7 @@ print_stats() {
     git status
     git log --oneline -5
     echo "$(git rev-list --all --count) commits in total"
+    wait
 }
 
 
