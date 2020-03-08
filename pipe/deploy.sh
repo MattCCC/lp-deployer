@@ -5,6 +5,7 @@ PROVISIONDIR="$DIR/provision"
 TAG="v${BITBUCKET_BUILD_NUMBER}"
 
 source "$(dirname "$0")/common.sh"
+source "$(dirname "$0")/utils.sh"
 
 # Wait for build to finish
 wait
@@ -13,7 +14,7 @@ date
 info "Make $TAG release from $BITBUCKET_BRANCH and deploy to $DEPLOY_URL"
 
 cd ${DIR}
-info "Checkout inside of $DIR"
+info "Checkout inside $DIR"
 git checkout -f -b ${TAG}
 
 # Remove untracked
@@ -30,60 +31,81 @@ date
 BRANCH=`git rev-parse --abbrev-ref HEAD`
 info "On branch: $BRANCH"
 
+apply_gitignores() {
+    date
+    local branch="release-${BITBUCKET_BRANCH}"
 
-date
-branch="release-${BITBUCKET_BRANCH}"
+    if [[ -f ${PROVISIONDIR}/.gitignores/all ]]; then
+        info "Apply gitignores"
+        cat ${PROVISIONDIR}/.gitignores/all > ${DIR}/.gitignore
 
-if [[ -f ${PROVISIONDIR}/.gitignores/all ]]; then
-    info "Apply gitignores"
-    cat ${PROVISIONDIR}/.gitignores/all > ${DIR}/.gitignore
+        # Apply for specific branch
+        if [[ -f ${PROVISIONDIR}/.gitignores/$branch ]]; then
+            cat ${PROVISIONDIR}/.gitignores/$branch >> ${DIR}/.gitignore
+            success "Gitignore for $branch updated from $PROVISIONDIR"
+        else
+            info "Branch specific gitignore not found. Skipped..."
+        fi
 
-    if [[ -f ${PROVISIONDIR}/.gitignores/$branch ]]; then
-        cat ${PROVISIONDIR}/.gitignores/$branch >> ${DIR}/.gitignore
-        success "Gitignore from $branch from $PROVISIONDIR updated"
-        cat ${DIR}/.gitignore
+        # Apply for all releases
+        if [[ -f ${PROVISIONDIR}/.gitignores/release ]]; then
+            cat ${PROVISIONDIR}/.gitignores/release >> ${DIR}/.gitignore
+            success "Gitignore for release updated from $PROVISIONDIR"
+        else
+            info "Release gitignore not found. Skipped..."
+        fi
+    else
+        info "Gitignores not found. Skipped..."
     fi
-else
-    info "Gitignores not found. Skipped..."
-fi
+
+    wait
+}
+
+build_cleanup() {
+    date
+    info 'Run make build cleanup'
+    make build-cleanup &> /dev/null
+    success 'Completed'
+    wait
+}
+
+add_dist() {
+    date
+    info 'Run Add Dist by refreshing gitignore'
+    git rm -r --cached . &> /dev/null
+    git add -A &> /dev/null
+    git add app/dist -f &> /dev/null
+    git commit -m "chore(INBUILD) Add dist"
+    success 'Completed'
+    wait
+}
+
+remove_src() {
+    date
+    info 'Run make remove src'
+    make remove-src &> /dev/null
+    wait
+    git commit -m "chore(INBUILD) Cleanup"
+    success 'Completed'
+}
+
+print_stats() {
+    date
+    git status
+    git log --oneline -5
+    echo "$(git rev-list --all --count) commits in total"
+}
 
 
-date
-info 'Run make build cleanup'
-make build-cleanup &> /dev/null
-success 'Completed'
-wait
-
-
-date
-info 'Run Add Dist by refreshing gitignore'
-git rm -r --cached . &> /dev/null
-git add -A &> /dev/null
-git add app/dist -f &> /dev/null
-git commit -m "chore(INBUILD) Add dist"
-success 'Completed'
-wait
-
-
-date
-info 'Run make remove src'
-make remove-src &> /dev/null
-wait
-git commit -m "chore(INBUILD) Cleanup"
-success 'Completed'
-
-date
-git status
-git log --oneline -5
-echo "$(git rev-list --all --count) commits in total"
+apply_gitignores
+build_cleanup
+add_dist
+remove_src
+print_stats
 
 
 date
 info "Connect to remote"
-
-# Add keys
-mkdir ~/.ssh/ &>/dev/null
-touch ~/.ssh/known_hosts
 
 DOMAIN=`echo "$DEPLOY_URL" | sed 's/.*@\(.*\):.*/\1/'`
 PORT=`echo "$DEPLOY_URL" | sed -n 's|.*:\([0-9]*\)\(.*\)|\1|p'`
@@ -97,36 +119,8 @@ elif [ -z "$PORT" ]; then
     error "Fatal Error: Cannot find port in deploy url"
     # exit 126
 else
-    ssh-keyscan -p ${PORT} -t rsa,dsa ${DOMAIN} >> ~/.ssh/known_hosts
-
-    # Prepare key
-    beginRepFrom="-----BEGIN RSA PRIVATE KEY-----"
-    endRepFrom="-----END RSA PRIVATE KEY-----"
-
-    PRIV_KEY_DEPLOY_URL=`echo "$PRIV_KEY_DEPLOY_URL" | sed 's|.*BEGIN.*-----\s\(.*\)\s-----END.*|\1|'`
-
-    # Ensure RSA is proper
-    PRIV_KEY_DEPLOY_URL="${PRIV_KEY_DEPLOY_URL// /$'\n'}"
-
-    PRIV_KEY_DEPLOY_URL="${beginRepFrom}
-${PRIV_KEY_DEPLOY_URL}
-${endRepFrom}"
-
-    touch ~/.ssh/${DOMAIN}
-
-    # Preserve newlines
-    cat > ~/.ssh/${DOMAIN} <<_EOF_
-${PRIV_KEY_DEPLOY_URL}
-_EOF_
-
-    chmod 400 ~/.ssh/${DOMAIN}
-
-    # Start the ssh-agent in bg
-    eval $(ssh-agent -s)
-
-    # Add to Git
-    ssh-add ~/.ssh/${DOMAIN} &>/dev/null
-    wait
+    # Add ssh key to known hosts
+    add_key "$PRIV_KEY_DEPLOY_URL" "$DOMAIN" "$DOMAIN"
 
     git remote add deploy ${DEPLOY_URL}
 
@@ -137,7 +131,12 @@ _EOF_
     wait
 
     # Switch to branch
-    ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; npm i; npm run build; pm2 startOrRestart ecosystem.config.js --only $APP_ENV &>/dev/null &"
+    if [ -z "$BACKEND" ]; then
+        ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG"
+    else
+        ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; npm i; npm run build; pm2 startOrRestart ecosystem.config.js --only $APP_ENV &>/dev/null &"
+    fi
+
     success 'Deployment Successful'
     wait
 fi

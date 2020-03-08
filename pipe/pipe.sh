@@ -35,7 +35,13 @@ validate() {
   : PRIV_KEY_DEPLOY_URL=${PRIV_KEY_DEPLOY_URL:?'PRIV_KEY_DEPLOY_URL variable missing.'}
 }
 
-run_pipe() {
+add_repos_keys() {
+  info "Add repos keys..."
+
+  ./provision/composer.sh
+}
+
+deploy() {
     info "Starting deployment..."
 
     ./provision/deploy.sh
@@ -49,12 +55,12 @@ run_pipe() {
       fail "Deployment failed."
       exit $STATUS
     fi
-
 }
 
 validate
 enable_debug
-run_pipe
+add_repos_keys
+deploy
 
 # Keep terminal open
 exec "$@"
