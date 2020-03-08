@@ -8,7 +8,7 @@
 # Required globals:
 #   REPLACE_FROM
 #   REPLACE_TO
-#   PRIV_KEY
+#   PRIV_KEY_GITHUB
 #
 #   REPLACE_FROM_BITBUCKET
 #   REPLACE_TO_BITBUCKET
@@ -19,7 +19,7 @@ source "$(dirname "$0")/utils.sh"
 
 REPLACE_FROM="${REPLACE_FROM//[|]}"
 REPLACE_TO="${REPLACE_TO//[|]}"
-PRIV_KEY="${PRIV_KEY//[|]}"
+PRIV_KEY_GITHUB="${PRIV_KEY_GITHUB//[|]}"
 REPLACE_FROM_BITBUCKET="${REPLACE_FROM_BITBUCKET//[|]}"
 REPLACE_TO_BITBUCKET="${REPLACE_TO_BITBUCKET//[|]}"
 PRIV_KEY_BITBUCKET="${PRIV_KEY_BITBUCKET//[|]}"
@@ -27,7 +27,7 @@ PRIV_KEY_BITBUCKET="${PRIV_KEY_BITBUCKET//[|]}"
 APP_HOME=$PWD
 FILES=( "composer.json" "composer.lock" "wp/wp-content/themes/local-register/composer.json" "wp/wp-content/themes/local-register/composer.lock" "wp/wp-content/themes/local-physio/composer.json" "wp/wp-content/themes/local-physio/composer.lock" "wp/wp-content/themes/local-osteo/composer.json" "wp/wp-content/themes/local-osteo/composer.lock" )
 
-add_key "$PRIV_KEY" "github.com" "id_rsa"
+add_key "$PRIV_KEY_GITHUB" "github.com" "id_rsa"
 add_key "$PRIV_KEY_BITBUCKET" "bitbucket.org" "id_rsa2"
 
 # Run Composer replacer
