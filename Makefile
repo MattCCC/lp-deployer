@@ -26,8 +26,10 @@ release:
 	  git push --tags ;\
 	fi
 
-publish:
+build:
 	docker build -t lp-deployer .
+
+publish: build
 	docker login
 	docker tag lp-deployer:latest deindesign33s/lp-deployer:latest
 	docker push deindesign33s/lp-deployer:latest

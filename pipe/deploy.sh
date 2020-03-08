@@ -122,7 +122,7 @@ elif [ -z "$PORT" ]; then
     # exit 126
 else
     # Add ssh key to known hosts
-    add_key "$PRIV_KEY_DEPLOY_URL" "$DOMAIN" "$DOMAIN"
+    add_key "$PRIV_KEY_DEPLOY_URL" "$DOMAIN" "$DOMAIN" "$PORT"
 
     git remote add deploy ${DEPLOY_URL}
 

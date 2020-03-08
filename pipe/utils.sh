@@ -16,7 +16,7 @@
 format_key() {
     local KEY=$1
     local KEY_TYPE=`echo "$KEY" | sed 's|.*BEGIN\(.*\)-----\s\(.*\)\s-----END\(.*\)|\1|'`
-    local KEY=`echo "$KEY" | sed 's|.*BEGIN\(.*\)-----\s\(.*\)\s-----END\(.*\)|\2|'`
+    KEY=`echo "$KEY" | sed 's|.*BEGIN\(.*\)-----\s\(.*\)\s-----END\(.*\)|\2|'`
 
     KEY="${KEY// /$'\n'}"
 
@@ -40,13 +40,14 @@ add_key() {
     local KEY=$1
     local HOST=$2
     local HOSTFILE=$3
+    local PORT=${4:-22} # default port = 22
 
     mkdir ~/.ssh/ &>/dev/null
     touch ~/.ssh/known_hosts
 
     if [ ! -z "${KEY}" ] ; then
         KEY=$(format_key "$KEY")
-        ssh-keyscan -t rsa,dsa ${HOST} >> ~/.ssh/known_hosts
+        ssh-keyscan -p ${PORT} -t rsa,dsa ${HOST} >> ~/.ssh/known_hosts
 
         touch ~/.ssh/${HOSTFILE}
         cat > ~/.ssh/${HOSTFILE} <<_EOF_
