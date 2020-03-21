@@ -34,24 +34,20 @@ add_key "$PRIV_KEY_BITBUCKET" "bitbucket.org" "id_rsa2"
 # TODO: ssh instead of personal tokens
 if [ ! -z "${REPLACE_FROM}" ] ; then
 
-    cd ${APP_HOME}
-
     for f in "${FILES[@]}"
     do
         ff="$APP_HOME/$f"
-
         file="${f##*/}"
-
         search="/";
 
-        # contains
+        # Check if contains subdir
         if [[ $f =~ $search ]]; then
             cd $APP_HOME/${f%/*}
         else
             cd ${APP_HOME}
         fi
 
-        info "Composer Dir $PWD";
+        debug "Composer Dir $PWD";
 
         if [ -f "$file" ]; then
 
@@ -59,9 +55,9 @@ if [ ! -z "${REPLACE_FROM}" ] ; then
 
             sed -i "s|${REPLACE_FROM_BITBUCKET}|${REPLACE_TO_BITBUCKET}|g" ${file}
 
-            echo "$ff found"
+            debug "$ff found"
         else
-            warning "$ff does not exist"
+            debug "$ff does not exist"
         fi
 
     done

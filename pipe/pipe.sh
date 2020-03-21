@@ -36,7 +36,7 @@ validate() {
 }
 
 add_repos_keys() {
-  info "Add repos keys..."
+  info "Add keys..."
 
   ./provision/composer.sh
 }
@@ -46,13 +46,13 @@ deploy() {
 
     ./provision/deploy.sh
 
-    # TODO return depending on response
-    STATUS=0
+    # Return depending on response
+    STATUS=$?
 
     if [[ "${STATUS}" == "0" ]]; then
-      success "Deployment finished."
+      success "Deployment Successful."
     else
-      fail "Deployment failed."
+      fail "Deployment Failed."
       exit $STATUS
     fi
 }

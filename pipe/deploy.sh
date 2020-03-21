@@ -116,10 +116,10 @@ SSH_GIT_DIR=`echo "$DEPLOY_URL" | sed -n 's|.*:\([0-9]*\)\(.*\)|\2|p'`
 
 if [ -z "$DOMAIN" ]; then
     error "Fatal Error: Cannot find deploy url domain"
-    # exit 126
+    exit 126
 elif [ -z "$PORT" ]; then
     error "Fatal Error: Cannot find port in deploy url"
-    # exit 126
+    exit 126
 else
     # Add ssh key to known hosts
     add_key "$PRIV_KEY_DEPLOY_URL" "$DOMAIN" "$DOMAIN" "$PORT"
@@ -141,7 +141,7 @@ else
         ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; npm i; npm run build; pm2 startOrRestart ecosystem.config.js --only $APP_ENV &>/dev/null &"
     fi
 
-    success 'Deployment Successful'
+    info 'Proceeded'
     wait
 fi
 
