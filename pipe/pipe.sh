@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # Deploy files using git & ssh
 #
 # Required globals:
@@ -15,7 +16,8 @@
 
 source "$(dirname "$0")/common.sh"
 
-LFTP_DEBUG_ARGS=
+LFTP_DEBUG_ARGS=""
+
 ## Enable debug mode.
 enable_debug() {
   if [[ "${DEBUG}" == "true" ]]; then
@@ -41,6 +43,15 @@ add_repos_keys() {
   ./provision/composer.sh
 }
 
+## Only for backend as composer repos keys are required to build properly
+install_build_test() {
+  if [ ! -z "$BACKEND" ]; then
+    make install-verbose
+    make build
+    make test
+  fi
+}
+
 deploy() {
     info "Starting deployment..."
 
@@ -60,6 +71,7 @@ deploy() {
 validate
 enable_debug
 add_repos_keys
+install_build_test
 deploy
 
 # Keep terminal open
