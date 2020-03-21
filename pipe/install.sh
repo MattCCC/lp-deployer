@@ -2,8 +2,6 @@
 
 source "$(dirname "$0")/common.sh"
 
-echo ${APP_HOME};
-
 date
 info "Installing additional packages..."
 

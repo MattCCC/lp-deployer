@@ -42,7 +42,7 @@ if [ ! -z "${REPLACE_FROM}" ] ; then
 
         # Check if contains subdir
         if [[ $f =~ $search ]]; then
-            cd $APP_HOME/${f%/*}
+            cd $APP_HOME/${f%/*} &>/dev/null
         else
             cd ${APP_HOME}
         fi

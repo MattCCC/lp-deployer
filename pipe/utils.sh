@@ -15,11 +15,21 @@
 #######################################
 format_key() {
     local KEY=$1
-    local KEY_TYPE=`echo "$KEY" | sed 's|.*BEGIN\(.*\)-----\s\(.*\)\s-----END\(.*\)|\1|'`
+    local KEY_TYPE=""
+
+    # Ensure key has no new lines
+    KEY="${KEY//$'\n'/ }"
+
+    # Get key type
+    KEY_TYPE=`echo "$KEY" | sed 's|.*BEGIN\(.*\)-----\s\(.*\)\s-----END\(.*\)|\1|'`
+
+    # Get key only
     KEY=`echo "$KEY" | sed 's|.*BEGIN\(.*\)-----\s\(.*\)\s-----END\(.*\)|\2|'`
 
+    # Replace spaces with new lines (only key)
     KEY="${KEY// /$'\n'}"
 
+    # Return formatted key
     echo "-----BEGIN${KEY_TYPE}-----
 ${KEY}
 -----END${KEY_TYPE}-----"
