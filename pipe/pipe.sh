@@ -46,6 +46,14 @@ add_repos_keys() {
   info "Add keys..."
 
   ./provision/composer.sh
+
+  # Return depending on response
+  STATUS=$?
+
+  if [[ "${STATUS}" != "0" ]]; then
+    fail "Adding keys Failed. Deployment aborted"
+    exit $STATUS
+  fi
 }
 
 ## Only for backend as composer repos keys are required to build properly
@@ -66,9 +74,9 @@ deploy() {
     STATUS=$?
 
     if [[ "${STATUS}" == "0" ]]; then
-      success "Deployment Successful."
+      success "Deployment Successful"
     else
-      fail "Deployment Failed."
+      fail "Deployment Failed"
       exit $STATUS
     fi
 }
