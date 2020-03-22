@@ -122,10 +122,10 @@ deploy_to_remote() {
         # Add ssh key to known hosts
         add_key "$PRIV_KEY" "$DOMAIN" "$DOMAIN" "$PORT"
 
-        git remote add deploy ${URL}
+        git remote add ${DOMAIN} ${URL}
 
         # Push and sanitize msg
-        PUSH_MSG="$(git push -f -u deploy ${TAG})"
+        PUSH_MSG="$(git push -f -u ${DOMAIN} ${TAG})"
         echo "${PUSH_MSG//$URL/replaced}"
 
         wait
