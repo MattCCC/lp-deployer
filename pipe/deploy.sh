@@ -126,7 +126,7 @@ deploy_to_remote() {
 
         # Push and sanitize msg
         PUSH_MSG="$(git push -f -u ${DOMAIN} ${TAG})"
-        echo "${PUSH_MSG//$URL/replaced}"
+        echo "${PUSH_MSG//$URL/ }"
 
         wait
 
