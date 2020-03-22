@@ -10,26 +10,28 @@ source "$(dirname "$0")/utils.sh"
 # Wait for build to finish
 wait
 
-date
-info "Make $TAG release from $BITBUCKET_BRANCH and deploy to $DEPLOY_URL"
+checkout_branch() {
+    date
+    info "$TAG release from $BITBUCKET_BRANCH"
 
-cd ${DIR}
-info "Checkout inside $DIR"
-git checkout -f -b ${TAG}
+    cd ${DIR}
+    info "Checkout inside $DIR"
+    git checkout -f -b ${TAG}
 
-# Remove untracked
-git clean -fd
+    # Remove untracked
+    git clean -fd
 
-# Skip LFs to CRLFs warning
-git config core.autocrlf true
+    # Skip LFs to CRLFs warning
+    git config core.autocrlf true
 
-# In order to commit
-git config --global user.email "you@auto.com"
-git config --global user.name "Auto"
+    # In order to commit
+    git config --global user.email "you@auto.com"
+    git config --global user.name "Auto"
 
-date
-BRANCH=`git rev-parse --abbrev-ref HEAD`
-info "On branch: $BRANCH"
+    date
+    local BRANCH=`git rev-parse --abbrev-ref HEAD`
+    info "On branch: $BRANCH"
+}
 
 apply_gitignores() {
     date
@@ -98,50 +100,58 @@ print_stats() {
     wait
 }
 
+deploy_to_remote() {
+    local URL=$1
+    local PRIV_KEY=$2
 
+    local DOMAIN=`echo "$URL" | sed 's/.*@\(.*\):.*/\1/'`
+    local PORT=`echo "$URL" | sed -n 's|.*:\([0-9]*\)\(.*\)|\1|p'`
+    local SSH_DEST=`echo "$URL" | sed -n 's|.*\/\(.*\)\:\(.*\)|\1|p'`
+    local SSH_GIT_DIR=`echo "$URL" | sed -n 's|.*:\([0-9]*\)\(.*\)|\2|p'`
+
+    date
+    info "Connect to remote"
+
+    if [ -z "$DOMAIN" ]; then
+        error "Fatal Error: Cannot find deploy url domain"
+        exit 126
+    elif [ -z "$PORT" ]; then
+        error "Fatal Error: Cannot find port in deploy url"
+        exit 126
+    else
+        # Add ssh key to known hosts
+        add_key "$PRIV_KEY" "$DOMAIN" "$DOMAIN" "$PORT"
+
+        git remote add deploy ${URL}
+
+        # Push and sanitize msg
+        PUSH_MSG="$(git push -f -u deploy ${TAG})"
+        echo "${PUSH_MSG//$URL/replaced}"
+
+        wait
+
+        # Switch to branch
+        if [ ! -z "$BACKEND" ]; then
+            # TODO: connect to ssh to see if repo exists or has to be cloned
+
+            # Backend LP
+            ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG"
+        else
+            # TODO: list commands in separate exec file and load it from external repo, execute on prod and remove
+
+            # Node server (frontend)
+            ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; npm i; npm run build; pm2 startOrRestart ecosystem.config.js --only $APP_ENV &>/dev/null &"
+        fi
+
+        info 'Proceeded'
+        wait
+    fi
+}
+
+checkout_branch
 apply_gitignores
 build_cleanup
 add_dist
 remove_src
 print_stats
-
-
-date
-info "Connect to remote"
-
-DOMAIN=`echo "$DEPLOY_URL" | sed 's/.*@\(.*\):.*/\1/'`
-PORT=`echo "$DEPLOY_URL" | sed -n 's|.*:\([0-9]*\)\(.*\)|\1|p'`
-SSH_DEST=`echo "$DEPLOY_URL" | sed -n 's|.*\/\(.*\)\:\(.*\)|\1|p'`
-SSH_GIT_DIR=`echo "$DEPLOY_URL" | sed -n 's|.*:\([0-9]*\)\(.*\)|\2|p'`
-
-if [ -z "$DOMAIN" ]; then
-    error "Fatal Error: Cannot find deploy url domain"
-    exit 126
-elif [ -z "$PORT" ]; then
-    error "Fatal Error: Cannot find port in deploy url"
-    exit 126
-else
-    # Add ssh key to known hosts
-    add_key "$PRIV_KEY_DEPLOY_URL" "$DOMAIN" "$DOMAIN" "$PORT"
-
-    git remote add deploy ${DEPLOY_URL}
-
-    # Push and sanitize msg
-    PUSH_MSG="$(git push -f -u deploy ${TAG})"
-    echo "${PUSH_MSG//$DEPLOY_URL/replaced}"
-
-    wait
-
-    # Switch to branch
-    if [ ! -z "$BACKEND" ]; then
-        # Backend
-        ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG"
-    else
-        # Node server (frontend)
-        ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; npm i; npm run build; pm2 startOrRestart ecosystem.config.js --only $APP_ENV &>/dev/null &"
-    fi
-
-    info 'Proceeded'
-    wait
-fi
-
+deploy_to_remote "$DEPLOY_URL" "$PRIV_KEY_DEPLOY_URL"
