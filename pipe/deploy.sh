@@ -130,11 +130,10 @@ deploy_to_remote() {
 
         wait
 
-        # Switch to branch
         if [ ! -z "$BACKEND" ]; then
             # TODO: connect to ssh to see if repo exists or has to be cloned
 
-            # Backend LP
+            # Backend
             ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG"
         else
             # TODO: list commands in separate exec file and load it from external repo, execute on prod and remove
@@ -155,3 +154,7 @@ add_dist
 remove_src
 print_stats
 deploy_to_remote "$DEPLOY_URL" "$PRIV_KEY_DEPLOY_URL"
+
+if [ ! -z "$DEPLOY_URL2" ]; then
+    deploy_to_remote "$DEPLOY_URL2" "$PRIV_KEY_DEPLOY_URL2"
+fi

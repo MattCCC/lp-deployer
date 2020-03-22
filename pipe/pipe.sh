@@ -3,16 +3,21 @@
 # Deploy files using git & ssh
 #
 # Required globals:
-#   BITBUCKET_BRANCH
-#   APP_ENV
-#   DEPLOY_URL
 #   CI
 #   BITBUCKET_BUILD_NUMBER
+#   BITBUCKET_BRANCH
+#
+#   APP_ENV
+#
+#   DEPLOY_URL
 #   PRIV_KEY_DEPLOY_URL
 #
 # Optional globals:
 #   BACKEND
 #   DEBUG
+#
+#   DEPLOY_URL2
+#   PRIV_KEY_DEPLOY_URL2
 
 source "$(dirname "$0")/common.sh"
 
