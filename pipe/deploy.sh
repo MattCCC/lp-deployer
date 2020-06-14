@@ -139,7 +139,7 @@ deploy_to_remote() {
             # TODO: list commands in separate exec file and load it from external repo, execute on prod and remove
 
             # Node server (frontend)
-            ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; npm i; npm run build; pm2 startOrRestart ecosystem.config.js --only $APP_ENV &>/dev/null &"
+            ssh -p ${PORT} ${SSH_DEST} "cd /$SSH_GIT_DIR; git checkout -f $TAG; rm -rf .nuxt/ node_modules/ dist/; yarn install; yarn build; pm2 startOrRestart ecosystem.config.js --only $APP_ENV &>/dev/null &"
         fi
 
         info 'Proceeded'
